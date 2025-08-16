@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBINexus Sensor Theory - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            margin-bottom: 40px;
+            border-bottom: 3px solid #00ff88;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 1.2em;
+        }
+
+        .section {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #2a2a3e;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .sensor-viz {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .sensor-node {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.3) 0%, transparent 70%);
+            border: 3px solid #00ff88;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sensor-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+        }
+
+        .sensor-node.active {
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.6) 0%, transparent 70%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 136, 1); }
+            100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+        }
+
+        .sensor-label {
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .sensor-value {
+            font-size: 1.5em;
+            color: #00ff88;
+        }
+
+        .formula-box {
+            background: #0a0a0a;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .derivative-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .derivative-card {
+            background: #16213e;
+            border: 2px solid #2a3a5e;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .derivative-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff88;
+        }
+
+        .derivative-order {
+            color: #ff6b6b;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .derivative-meaning {
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+
+        .control-panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            background: #2a3a5e;
+            outline: none;
+            border-radius: 5px;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #00ff88;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+        }
+
+        .button {
+            background: #00ff88;
+            color: #0a0a0a;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .graph-container {
+            width: 100%;
+            height: 400px;
+            background: #0a0a0a;
+            border: 2px solid #2a3a5e;
+            border-radius: 10px;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .dimension-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .dimension-card {
+            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            border: 2px solid #2a3a5e;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dimension-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff88;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .dimension-card.active {
+            border-color: #00ff88;
+            background: linear-gradient(135deg, #1a2a3e 0%, #16213e 100%);
+        }
+
+        .dimension-title {
+            color: #00ff88;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .dimension-value {
+            color: #ffffff;
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .dimension-description {
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+
+        .warning {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .warning.active {
+            display: block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .dag-visualization {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .dag-node {
+            width: 80px;
+            height: 80px;
+            background: #16213e;
+            border: 2px solid #00ff88;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            transition: all 0.3s ease;
+        }
+
+        .dag-edge {
+            position: absolute;
+            height: 2px;
+            background: #00ff88;
+            transform-origin: left center;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: #666;
+            border-top: 1px solid #2a2a3e;
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OBINexus Sensor Theory</h1>
+        <p class="subtitle">Computing from the Heart - Interactive Demonstration</p>
+    </header>
+
+    <div class="container">
+        <!-- Sensor Definition Section -->
+        <div class="section">
+            <h2>Sensor as Epistemic Entity</h2>
+            <div class="formula-box">
+                S = (D, Φ, Ψ, ∂(n), DAG)
+            </div>
+            <p>Click on sensors below to see them activate and process dimensional data:</p>
+            
+            <div class="sensor-viz">
+                <div class="sensor-node" id="sensor1" onclick="toggleSensor(1)">
+                    <div class="sensor-label">Dimension D₁</div>
+                    <div class="sensor-value" id="sensor1-value">0.00</div>
+                </div>
+                <div class="sensor-node" id="sensor2" onclick="toggleSensor(2)">
+                    <div class="sensor-label">Dimension D₂</div>
+                    <div class="sensor-value" id="sensor2-value">0.00</div>
+                </div>
+                <div class="sensor-node" id="sensor3" onclick="toggleSensor(3)">
+                    <div class="sensor-label">Dimension D₃</div>
+                    <div class="sensor-value" id="sensor3-value">0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Derivative Control Theory Section -->
+        <div class="section">
+            <h2>Derivative Exhaustion Control</h2>
+            <p>The system monitors derivative orders to prevent collapse:</p>
+            
+            <div class="derivative-display">
+                <div class="derivative-card">
+                    <div class="derivative-order">f(x)</div>
+                    <div class="derivative-value" id="f0">0.00</div>
+                    <div class="derivative-meaning">Position/State</div>
+                </div>
+                <div class="derivative-card">
+                    <div class="derivative-order">f'(x)</div>
+                    <div class="derivative-value" id="f1">0.00</div>
+                    <div class="derivative-meaning">Velocity/Flow</div>
+                </div>
+                <div class="derivative-card">
+                    <div class="derivative-order">f''(x)</div>
+                    <div class="derivative-value" id="f2">0.00</div>
+                    <div class="derivative-meaning">Acceleration</div>
+                </div>
+                <div class="derivative-card">
+                    <div class="derivative-order">f'''(x)</div>
+                    <div class="derivative-value" id="f3">0.00</div>
+                    <div class="derivative-meaning">CONTROL BOUNDARY</div>
+                </div>
+                <div class="derivative-card">
+                    <div class="derivative-order">f⁽⁴⁾(x)</div>
+                    <div class="derivative-value" id="f4">0.00</div>
+                    <div class="derivative-meaning">COLLAPSE DETECTION</div>
+                </div>
+            </div>
+            
+            <div class="warning" id="collapse-warning">
+                ⚠️ SYSTEM APPROACHING COLLAPSE - f⁽⁴⁾(x) EXCEEDING THRESHOLD
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="section">
+            <h2>Interactive Control Panel</h2>
+            <div class="control-panel">
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>System Input Rate</span>
+                        <span id="input-rate-value">50</span>
+                    </div>
+                    <input type="range" id="input-rate" min="0" max="100" value="50" 
+                           oninput="updateInputRate(this.value)">
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Dimensional Complexity</span>
+                        <span id="complexity-value">30</span>
+                    </div>
+                    <input type="range" id="complexity" min="0" max="100" value="30" 
+                           oninput="updateComplexity(this.value)">
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="button" onclick="startSimulation()">Start Simulation</button>
+                    <button class="button" onclick="stopSimulation()">Stop Simulation</button>
+                    <button class="button" onclick="resetSystem()">Reset System</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dimensional Game Theory Section -->
+        <div class="section">
+            <h2>Dimensional Game Theory in Action</h2>
+            <p>Active dimensions adapt based on strategic requirements:</p>
+            
+            <div class="dimension-grid">
+                <div class="dimension-card" id="dim-offensive">
+                    <div class="dimension-title">Offensive Strategy</div>
+                    <div class="dimension-value" id="offensive-value">0%</div>
+                    <div class="dimension-description">Aggressive tactical decisions</div>
+                </div>
+                <div class="dimension-card" id="dim-defensive">
+                    <div class="dimension-title">Defensive Strategy</div>
+                    <div class="dimension-value" id="defensive-value">0%</div>
+                    <div class="dimension-description">Protective countermeasures</div>
+                </div>
+                <div class="dimension-card" id="dim-adaptive">
+                    <div class="dimension-title">Adaptive Strategy</div>
+                    <div class="dimension-value" id="adaptive-value">0%</div>
+                    <div class="dimension-description">Dynamic response patterns</div>
+                </div>
+                <div class="dimension-card" id="dim-predictive">
+                    <div class="dimension-title">Predictive Strategy</div>
+                    <div class="dimension-value" id="predictive-value">0%</div>
+                    <div class="dimension-description">Anticipatory calculations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DAG Visualization Section -->
+        <div class="section">
+            <h2>Directed Acyclic Graph State Management</h2>
+            <p>The DAG prevents infinite loops and ensures computational safety:</p>
+            <div class="dag-visualization" id="dag-viz">
+                <!-- DAG nodes will be dynamically created -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>OBINexus Computing - Sensor Theory Framework v1.0</p>
+        <p>© 2025 - Computing from the Heart</p>
+    </footer>
+
+    <script>
+        // Global state
+        let sensors = {
+            1: { active: false, value: 0, dimension: 'D₁' },
+            2: { active: false, value: 0, dimension: 'D₂' },
+            3: { active: false, value: 0, dimension: 'D₃' }
+        };
+        
+        let derivatives = {
+            0: 0, // f(x)
+            1: 0, // f'(x)
+            2: 0, // f''(x)
+            3: 0, // f'''(x)
+            4: 0  // f⁽⁴⁾(x)
+        };
+        
+        let dimensions = {
+            offensive: 0,
+            defensive: 0,
+            adaptive: 0,
+            predictive: 0
+        };
+        
+        let simulationRunning = false;
+        let simulationInterval = null;
+        let inputRate = 50;
+        let complexity = 30;
+        let time = 0;
+
+        // Toggle sensor activation
+        function toggleSensor(id) {
+            sensors[id].active = !sensors[id].active;
+            const node = document.getElementById(`sensor${id}`);
+            if (sensors[id].active) {
+                node.classList.add('active');
+            } else {
+                node.classList.remove('active');
+            }
+            updateSensorDisplay();
+        }
+
+        // Update sensor display values
+        function updateSensorDisplay() {
+            Object.keys(sensors).forEach(id => {
+                const sensor = sensors[id];
+                if (sensor.active) {
+                    sensor.value = Math.sin(time * 0.01 * id) * 50 + 50;
+                } else {
+                    sensor.value *= 0.95; // Decay when inactive
+                }
+                document.getElementById(`sensor${id}-value`).textContent = 
+                    sensor.value.toFixed(2);
+            });
+        }
+
+        // Update input rate
+        function updateInputRate(value) {
+            inputRate = parseInt(value);
+            document.getElementById('input-rate-value').textContent = value;
+        }
+
+        // Update complexity
+        function updateComplexity(value) {
+            complexity = parseInt(value);
+            document.getElementById('complexity-value').textContent = value;
+        }
+
+        // Calculate derivatives based on system state
+        function calculateDerivatives() {
+            // Base position (sum of active sensor values)
+            derivatives[0] = Object.values(sensors)
+                .filter(s => s.active)
+                .reduce((sum, s) => sum + s.value, 0) / 100;
+            
+            // Velocity (rate of change)
+            derivatives[1] = (inputRate / 100) * Math.sin(time * 0.05);
+            
+            // Acceleration
+            derivatives[2] = (complexity / 100) * Math.cos(time * 0.03);
+            
+            // Control boundary (3rd derivative)
+            derivatives[3] = Math.abs(derivatives[2] * derivatives[1]);
+            
+            // Collapse detection (4th derivative)
+            derivatives[4] = derivatives[3] * (complexity / 50);
+            
+            // Update display
+            Object.keys(derivatives).forEach(order => {
+                const value = derivatives[order];
+                const element = document.getElementById(`f${order}`);
+                element.textContent = value.toFixed(3);
+                
+                // Color coding for warnings
+                if (order === '3' && value > 0.8) {
+                    element.style.color = '#ffaa00';
+                } else if (order === '4' && value > 1.0) {
+                    element.style.color = '#ff6b6b';
+                    document.getElementById('collapse-warning').classList.add('active');
+                } else {
+                    element.style.color = '#00ff88';
+                    if (order === '4') {
+                        document.getElementById('collapse-warning').classList.remove('active');
+                    }
+                }
+            });
+        }
+
+        // Update dimensional strategies
+        function updateDimensions() {
+            const activeSensorCount = Object.values(sensors).filter(s => s.active).length;
+            
+            // Calculate dimensional strategies based on system state
+            dimensions.offensive = (derivatives[1] > 0 ? Math.abs(derivatives[1]) : 0) * 100;
+            dimensions.defensive = (derivatives[3] > 0.5 ? derivatives[3] : 0) * 100;
+            dimensions.adaptive = (activeSensorCount / 3) * 100;
+            dimensions.predictive = (1 - derivatives[4]) * 100;
+            
+            // Update display
+            Object.keys(dimensions).forEach(dim => {
+                const value = Math.max(0, Math.min(100, dimensions[dim]));
+                document.getElementById(`${dim}-value`).textContent = 
+                    value.toFixed(0) + '%';
+                
+                // Highlight active dimensions
+                const card = document.getElementById(`dim-${dim}`);
+                if (value > 50) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+        }
+
+        // Create DAG visualization
+        function createDAG() {
+            const container = document.getElementById('dag-viz');
+            container.innerHTML = '';
+            
+            // Create nodes
+            const nodes = [
+                { id: 'input', x: 100, y: 150, label: 'Input' },
+                { id: 'sensor1', x: 300, y: 50, label: 'S₁' },
+                { id: 'sensor2', x: 300, y: 150, label: 'S₂' },
+                { id: 'sensor3', x: 300, y: 250, label: 'S₃' },
+                { id: 'control', x: 500, y: 150, label: 'Control' },
+                { id: 'output', x: 700, y: 150, label: 'Output' }
+            ];
+            
+            // Create edges
+            const edges = [
+                { from: 'input', to: 'sensor1' },
+                { from: 'input', to: 'sensor2' },
+                { from: 'input', to: 'sensor3' },
+                { from: 'sensor1', to: 'control' },
+                { from: 'sensor2', to: 'control' },
+                { from: 'sensor3', to: 'control' },
+                { from: 'control', to: 'output' }
+            ];
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                const edgeEl = document.createElement('div');
+                edgeEl.className = 'dag-edge';
+                
+                const dx = toNode.x - fromNode.x;
+                const dy = toNode.y - fromNode.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                edgeEl.style.width = length + 'px';
+                edgeEl.style.left = fromNode.x + 'px';
+                edgeEl.style.top = fromNode.y + 'px';
+                edgeEl.style.transform = `rotate(${angle}deg)`;
+                
+                container.appendChild(edgeEl);
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'dag-node';
+                nodeEl.style.left = (node.x - 40) + 'px';
+                nodeEl.style.top = (node.y - 40) + 'px';
+                nodeEl.textContent = node.label;
+                
+                // Highlight active sensor nodes
+                if (node.id.startsWith('sensor')) {
+                    const sensorId = node.id.replace('sensor', '');
+                    if (sensors[sensorId] && sensors[sensorId].active) {
+                        nodeEl.style.background = 'rgba(0, 255, 136, 0.3)';
+                    }
+                }
+                
+                container.appendChild(nodeEl);
+            });
+        }
+
+        // Main simulation loop
+        function simulate() {
+            if (!simulationRunning) return;
+            
+            time += 0.1;
+            updateSensorDisplay();
+            calculateDerivatives();
+            updateDimensions();
+            
+            // Update DAG visualization occasionally
+            if (Math.floor(time) % 10 === 0) {
+                createDAG();
+            }
+        }
+
+        // Control functions
+        function startSimulation() {
+            if (!simulationRunning) {
+                simulationRunning = true;
+                simulationInterval = setInterval(simulate, 50);
+            }
+        }
+
+        function stopSimulation() {
+            simulationRunning = false;
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+                simulationInterval = null;
+            }
+        }
+
+        function resetSystem() {
+            stopSimulation();
+            time = 0;
+            
+            // Reset sensors
+            Object.keys(sensors).forEach(id => {
+                sensors[id].active = false;
+                sensors[id].value = 0;
+                document.getElementById(`sensor${id}`).classList.remove('active');
+            });
+            
+            // Reset derivatives
+            Object.keys(derivatives).forEach(order => {
+                derivatives[order] = 0;
+            });
+            
+            // Reset dimensions
+            Object.keys(dimensions).forEach(dim => {
+                dimensions[dim] = 0;
+            });
+            
+            // Update displays
+            updateSensorDisplay();
+            calculateDerivatives();
+            updateDimensions();
+            createDAG();
+            
+            // Clear warnings
+            document.getElementById('collapse-warning').classList.remove('active');
+        }
+
+        // Initialize
+        window.onload = function() {
+            createDAG();
+            updateSensorDisplay();
+            calculateDerivatives();
+            updateDimensions();
+        };
+    </script>
+</body>
+</html>
